@@ -1,0 +1,19 @@
+{
+  "short_name": "GymMulai",
+  "name": "GymMulai - Panduan Lengkap Gym Pemula",
+  "description": "Panduan alat gym, simulasi gerakan, program pemula, kalkulator nutrisi, dan workout tracker.",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "./",
+  "scope": "./",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "display": "standalone",
+  "orientation": "portrait"
+}
