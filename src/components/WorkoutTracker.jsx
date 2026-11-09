@@ -9,10 +9,12 @@ import {
   Download,
   Upload,
   HelpCircle,
-  Sparkles,
+  Flame,
   X,
   RotateCcw,
-  Award
+  Award,
+  AlertCircle,
+  Dumbbell
 } from 'lucide-react';
 import { RestTimer } from './RestTimer';
 import { exerciseList } from '../data/exercisesData';
@@ -65,7 +67,6 @@ const DEFAULT_STARTER_EXERCISES = [
 ];
 
 export function WorkoutTracker({ activePlan, onInspectExercise }) {
-  // Load saved in-progress session from localStorage
   const [sessionTitle, setSessionTitle] = useState(() => {
     try {
       const saved = localStorage.getItem('gym_active_session_v2');
@@ -104,12 +105,13 @@ export function WorkoutTracker({ activePlan, onInspectExercise }) {
   const [activeRestSeconds, setActiveRestSeconds] = useState(90);
   const [activeTimerExName, setActiveTimerExName] = useState('');
 
-  // Custom modal states (replacing native alert/prompt/confirm)
   const [showAddModal, setShowAddModal] = useState(false);
   const [customExName, setCustomExName] = useState('');
   const [customExMuscle, setCustomExMuscle] = useState('Dada');
   const [celebrationSummary, setCelebrationSummary] = useState(null);
   const [toastMsg, setToastMsg] = useState('');
+  const [errorBanner, setErrorBanner] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef(null);
 
   const showToast = (msg) => {
@@ -117,7 +119,6 @@ export function WorkoutTracker({ activePlan, onInspectExercise }) {
     setTimeout(() => setToastMsg(''), 3200);
   };
 
-  // Persist active workout session automatically on every change
   useEffect(() => {
     try {
       localStorage.setItem(
@@ -127,7 +128,6 @@ export function WorkoutTracker({ activePlan, onInspectExercise }) {
     } catch (e) {}
   }, [sessionTitle, exercises]);
 
-  // Apply incoming activePlan when user selects a program or quiz result
   useEffect(() => {
     if (!activePlan) return;
 
@@ -147,7 +147,7 @@ export function WorkoutTracker({ activePlan, onInspectExercise }) {
           ]
         }
       ]);
-      showToast(`✅ "${ex.name}" ditambahkan ke sesi latihan aktif!`);
+      showToast(`"${ex.name}" ditambahkan ke sesi latihan aktif.`);
       return;
     }
 
@@ -172,7 +172,7 @@ export function WorkoutTracker({ activePlan, onInspectExercise }) {
         };
       });
       setExercises(mapped);
-      showToast(`📋 Program "${activePlan.title}" berhasil dimuat!`);
+      showToast(`Program "${activePlan.title}" berhasil dimuat.`);
     }
   }, [activePlan]);
 
@@ -188,6 +188,7 @@ export function WorkoutTracker({ activePlan, onInspectExercise }) {
   };
 
   const toggleSetComplete = (exercise, setIndex) => {
+    setErrorBanner('');
     const currentlyCompleted = exercise.sets[setIndex]?.completed;
     const nextCompleted = !currentlyCompleted;
 
@@ -242,6 +243,7 @@ export function WorkoutTracker({ activePlan, onInspectExercise }) {
   };
 
   const handleAddFromModal = (presetEx = null) => {
+    setErrorBanner('');
     if (presetEx) {
       setExercises((prev) => [
         ...prev,
@@ -258,11 +260,14 @@ export function WorkoutTracker({ activePlan, onInspectExercise }) {
         }
       ]);
       setShowAddModal(false);
-      showToast(`✅ "${presetEx.name}" berhasil ditambahkan!`);
+      showToast(`"${presetEx.name}" berhasil ditambahkan.`);
       return;
     }
 
-    if (!customExName.trim()) return;
+    if (!customExName.trim()) {
+      setErrorBanner('Masukkan nama gerakan terlebih dahulu sebelum menambahkan.');
+      return;
+    }
     setExercises((prev) => [
       ...prev,
       {
@@ -279,12 +284,19 @@ export function WorkoutTracker({ activePlan, onInspectExercise }) {
     ]);
     setCustomExName('');
     setShowAddModal(false);
-    showToast('✅ Gerakan kustom berhasil ditambahkan!');
+    showToast('Gerakan kustom berhasil ditambahkan.');
   };
 
   const deleteExercise = (exerciseId) => {
     setExercises((prev) => prev.filter((ex) => ex.id !== exerciseId));
-    showToast('🗑️ Gerakan dihapus dari sesi ini.');
+    showToast('Gerakan dihapus dari sesi ini.');
+  };
+
+  const restoreDefaultSession = () => {
+    setExercises(DEFAULT_STARTER_EXERCISES);
+    setSessionTitle('Full Body Pemula - Sesi Aktif');
+    setErrorBanner('');
+    showToast('Sesi latihan default berhasil dimuat kembali.');
   };
 
   const resetCurrentCheckmarks = () => {
@@ -294,7 +306,7 @@ export function WorkoutTracker({ activePlan, onInspectExercise }) {
         sets: ex.sets.map((s) => ({ ...s, completed: false }))
       }))
     );
-    showToast('🔄 Centang set direset untuk sesi baru.');
+    showToast('Tanda centang direset untuk sesi baru.');
   };
 
   const finishWorkout = () => {
@@ -313,10 +325,11 @@ export function WorkoutTracker({ activePlan, onInspectExercise }) {
     });
 
     if (completedSetsCount === 0) {
-      showToast('⚠️ Centang minimal 1 set yang sudah kamu selesaikan terlebih dahulu!');
+      setErrorBanner('Centang minimal 1 set yang sudah kamu selesaikan sebelum menyimpan sesi latihan.');
       return;
     }
 
+    setErrorBanner('');
     const sessionRecord = {
       id: `session-${Date.now()}`,
       title: sessionTitle,
@@ -340,14 +353,13 @@ export function WorkoutTracker({ activePlan, onInspectExercise }) {
     import('canvas-confetti')
       .then((module) => {
         const confetti = module.default;
-        confetti({ particleCount: 110, spread: 80, origin: { y: 0.5 } });
+        confetti({ particleCount: 100, spread: 75, origin: { y: 0.5 } });
       })
       .catch(() => {});
 
     setCelebrationSummary(sessionRecord);
   };
 
-  // Backup Export & Import JSON
   const handleExportData = () => {
     const payload = {
       exportedAt: new Date().toISOString(),
@@ -362,12 +374,14 @@ export function WorkoutTracker({ activePlan, onInspectExercise }) {
     a.download = `gymmulai-backup-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    showToast('💾 File backup latihan berhasil diunduh!');
+    showToast('File backup latihan berhasil diunduh.');
   };
 
   const handleImportData = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setIsImporting(true);
+    setErrorBanner('');
     const reader = new FileReader();
     reader.onload = (ev) => {
       try {
@@ -380,90 +394,222 @@ export function WorkoutTracker({ activePlan, onInspectExercise }) {
           setExercises(data.exercises);
         }
         if (data.sessionTitle) setSessionTitle(data.sessionTitle);
-        showToast('✅ Data cadangan berhasil dipulihkan!');
+        showToast('Data cadangan berhasil dipulihkan.');
       } catch (err) {
-        showToast('⚠️ File JSON tidak valid.');
+        setErrorBanner('File cadangan JSON tidak valid atau rusak. Pastikan memilih file ekspor GymMulai.');
+      } finally {
+        setIsImporting(false);
       }
     };
     reader.readAsText(file);
   };
 
-  // Calculate lifetime stats & badges
   const totalSessions = history.length;
   const lifetimeVolume = history.reduce((acc, item) => acc + (item.totalVolumeKg || 0), 0);
 
+  // Live Activity Ring calculation for current workout session
+  let currentTotalSets = 0;
+  let currentCompletedSets = 0;
+  exercises.forEach((ex) => {
+    ex.sets.forEach((s) => {
+      currentTotalSets++;
+      if (s.completed) currentCompletedSets++;
+    });
+  });
+  const completionPct = currentTotalSets > 0 ? Math.round((currentCompletedSets / currentTotalSets) * 100) : 0;
+  const ringCircumference = 2 * Math.PI * 24;
+  const ringOffset = ringCircumference - (completionPct / 100) * ringCircumference;
+
   return (
     <div className="space-y-6">
-      {/* Toast Notification */}
+      {/* iOS Toast Notification */}
       {toastMsg && (
-        <div className="fixed bottom-20 md:bottom-6 right-4 z-50 bg-slate-900 border border-emerald-500 text-white px-4 py-3 rounded-2xl shadow-2xl text-xs sm:text-sm font-bold animate-fadeIn">
-          {toastMsg}
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-20 lg:bottom-6 right-4 z-50 ios-card px-4 py-3 text-xs sm:text-sm font-bold animate-fadeIn flex items-center gap-2"
+          style={{ borderColor: 'var(--ios-green-border)' }}
+        >
+          <CheckCircle2 className="w-4 h-4 shrink-0" style={{ color: 'var(--ios-green-text)' }} aria-hidden="true" />
+          <span>{toastMsg}</span>
         </div>
       )}
 
-      {/* Gamification & Progress Overview Strip */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between">
-          <div>
-            <span className="text-xs text-slate-400 block">Total Latihan Tuntas</span>
-            <strong className="text-2xl font-black text-emerald-400">{totalSessions} Sesi</strong>
+      {/* Error State Banner (R-27) */}
+      {errorBanner && (
+        <div
+          role="alert"
+          className="ios-callout-red p-4 flex items-center justify-between gap-3 text-xs sm:text-sm"
+        >
+          <div className="flex items-center gap-2.5">
+            <AlertCircle className="w-5 h-5 shrink-0" style={{ color: 'var(--ios-red-text)' }} aria-hidden="true" />
+            <span className="font-semibold">{errorBanner}</span>
           </div>
-          <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-400">
-            <Trophy className="w-6 h-6" />
+          <button
+            type="button"
+            onClick={() => setErrorBanner('')}
+            aria-label="Tutup pesan peringatan"
+            className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+          >
+            <X className="w-4 h-4" aria-hidden="true" />
+          </button>
+        </div>
+      )}
+
+      {/* Apple Fitness Activity Ring & Summary Strip */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        {/* Card 1: Apple Fitness Activity Ring */}
+        <div className="ios-card p-4 flex items-center gap-3.5">
+          <div className="relative w-14 h-14 flex items-center justify-center shrink-0">
+            <svg viewBox="0 0 60 60" className="w-14 h-14 -rotate-90" role="img" aria-label={`Progres sesi ${completionPct}%`}>
+              <circle
+                cx="30"
+                cy="30"
+                r="24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="6"
+                style={{ color: 'var(--ios-fill)' }}
+              />
+              <circle
+                cx="30"
+                cy="30"
+                r="24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="6"
+                strokeLinecap="round"
+                strokeDasharray={ringCircumference}
+                strokeDashoffset={ringOffset}
+                className="transition-all duration-500"
+                style={{ color: 'var(--ios-green)' }}
+              />
+            </svg>
+            <span className="absolute text-xs font-extrabold tabular-nums">
+              {completionPct}%
+            </span>
+          </div>
+          <div>
+            <span className="text-xs font-medium block" style={{ color: 'var(--ios-text-secondary)' }}>
+              Cincin Sesi Ini
+            </span>
+            <strong className="text-lg font-extrabold tabular-nums">
+              {currentCompletedSets}/{currentTotalSets} Set
+            </strong>
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+        {/* Card 2: Total Sessions */}
+        <div className="ios-card p-4 flex items-center justify-between">
           <div>
-            <span className="text-xs text-slate-400 block">Total Beban Diangkat</span>
-            <strong className="text-2xl font-black text-amber-400">
+            <span className="text-xs font-medium block" style={{ color: 'var(--ios-text-secondary)' }}>
+              Total Latihan Tuntas
+            </span>
+            <strong
+              className="text-2xl font-extrabold tabular-nums"
+              style={{ color: 'var(--ios-green-text)' }}
+            >
+              {totalSessions} Sesi
+            </strong>
+          </div>
+          <div
+            className="w-11 h-11 rounded-[12px] flex items-center justify-center shrink-0"
+            style={{
+              backgroundColor: 'var(--ios-green-soft)',
+              color: 'var(--ios-green-text)'
+            }}
+          >
+            <Trophy className="w-5 h-5" aria-hidden="true" />
+          </div>
+        </div>
+
+        {/* Card 3: Total Volume */}
+        <div className="ios-card p-4 flex items-center justify-between">
+          <div>
+            <span className="text-xs font-medium block" style={{ color: 'var(--ios-text-secondary)' }}>
+              Total Beban Diangkat
+            </span>
+            <strong
+              className="text-2xl font-extrabold tabular-nums"
+              style={{ color: 'var(--ios-amber-text)' }}
+            >
               {lifetimeVolume.toLocaleString('id-ID')} kg
             </strong>
           </div>
-          <div className="p-3 rounded-xl bg-amber-500/10 text-amber-400">
-            <Sparkles className="w-6 h-6" />
+          <div
+            className="w-11 h-11 rounded-[12px] flex items-center justify-center shrink-0"
+            style={{
+              backgroundColor: 'var(--ios-amber-soft)',
+              color: 'var(--ios-amber-text)'
+            }}
+          >
+            <Flame className="w-5 h-5" aria-hidden="true" />
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+        {/* Card 4: Beginner Status */}
+        <div className="ios-card p-4 flex items-center justify-between">
           <div>
-            <span className="text-xs text-slate-400 block">Status Level Pemula</span>
-            <strong className="text-base font-black text-white">
+            <span className="text-xs font-medium block" style={{ color: 'var(--ios-text-secondary)' }}>
+              Status Konsistensi
+            </span>
+            <strong className="text-base font-extrabold block mt-0.5">
               {totalSessions === 0
-                ? '🌱 Siap Hari Pertama'
+                ? 'Siap Hari Pertama'
                 : totalSessions < 3
-                ? '🔥Langkah Pertama'
+                ? 'Langkah Pertama'
                 : totalSessions < 10
-                ? '⚡ Konsisten Mingguan'
-                : '🏆 Gym Regular'}
+                ? 'Konsisten Mingguan'
+                : 'Gym Regular'}
             </strong>
           </div>
-          <div className="p-3 rounded-xl bg-cyan-500/10 text-cyan-400">
-            <Award className="w-6 h-6" />
+          <div
+            className="w-11 h-11 rounded-[12px] flex items-center justify-center shrink-0"
+            style={{
+              backgroundColor: 'var(--ios-blue-soft)',
+              color: 'var(--ios-blue-text)'
+            }}
+          >
+            <Award className="w-5 h-5" aria-hidden="true" />
           </div>
         </div>
       </div>
 
-      {/* Top Banner & Controls */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-900 border border-slate-800 rounded-3xl p-5">
-        <div>
-          <div className="flex flex-wrap items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-950 text-emerald-400 border border-emerald-800/40">
+      {/* Session Header & Quick Tools */}
+      <div className="ios-card p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="w-full sm:w-auto flex-1">
+          <div className="flex flex-wrap items-center gap-2 mb-1.5">
+            <span
+              className="px-2.5 py-0.5 rounded-full text-xs font-bold"
+              style={{
+                backgroundColor: 'var(--ios-green-soft)',
+                color: 'var(--ios-green-text)'
+              }}
+            >
               Tersimpan Otomatis
             </span>
-            <span className="text-xs text-slate-400 font-mono">
-              {new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' })}
+            <span className="text-xs font-medium" style={{ color: 'var(--ios-text-secondary)' }}>
+              {new Date().toLocaleDateString('id-ID', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long'
+              })}
             </span>
           </div>
+
+          <label htmlFor="session-title-input" className="sr-only">
+            Judul Sesi Latihan Aktif
+          </label>
           <input
+            id="session-title-input"
             type="text"
-            aria-label="Judul Sesi Latihan"
             value={sessionTitle}
             onChange={(e) => setSessionTitle(e.target.value)}
-            className="text-xl sm:text-2xl font-black text-white bg-transparent border-b border-transparent hover:border-slate-700 focus:border-emerald-500 focus:outline-none w-full"
+            className="text-xl sm:text-2xl font-extrabold bg-transparent border-b border-transparent focus:outline-none w-full py-0.5"
+            style={{ color: 'var(--ios-text)' }}
           />
-          <p className="text-xs text-slate-400 mt-1">
-            Klik nama gerakan untuk melihat cara pakai & video. Centang kotak selesai untuk menyalakan Rest Timer otomatis.
+          <p className="text-xs mt-1" style={{ color: 'var(--ios-text-secondary)' }}>
+            Centang tombol selesai di setiap set untuk menyalakan Rest Timer secara otomatis.
           </p>
         </div>
 
@@ -475,46 +621,54 @@ export function WorkoutTracker({ activePlan, onInspectExercise }) {
               setActiveTimerExName('Timer Manual');
               setShowTimerModal(true);
             }}
-            className="flex-1 sm:flex-initial py-2.5 px-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition flex items-center justify-center gap-1.5 border border-slate-700"
+            className="flex-1 sm:flex-initial ios-btn-secondary text-xs"
           >
-            <TimerIcon className="w-4 h-4 text-emerald-400" /> Rest Timer
+            <TimerIcon className="w-4 h-4" style={{ color: 'var(--ios-green-text)' }} aria-hidden="true" />
+            <span>Rest Timer</span>
           </button>
           <button
             type="button"
             onClick={() => setShowHistory(!showHistory)}
-            className="flex-1 sm:flex-initial py-2.5 px-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition flex items-center justify-center gap-1.5 border border-slate-700"
+            aria-expanded={showHistory}
+            className="flex-1 sm:flex-initial ios-btn-secondary text-xs"
           >
-            <History className="w-4 h-4 text-amber-400" /> Riwayat & Backup ({history.length})
+            <History className="w-4 h-4" style={{ color: 'var(--ios-amber-text)' }} aria-hidden="true" />
+            <span>Riwayat & Backup ({history.length})</span>
           </button>
         </div>
       </div>
 
       {/* History & Backup Drawer */}
       {showHistory && (
-        <div className="bg-slate-900/95 border border-slate-800 rounded-3xl p-5 animate-fadeIn space-y-4">
+        <div className="ios-card p-5 animate-fadeIn space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 className="font-bold text-sm text-slate-200 flex items-center gap-2">
-              <History className="w-4 h-4 text-amber-400" /> Riwayat Sesi & Backup Data Lokal:
+            <h3 className="font-bold text-sm flex items-center gap-2">
+              <History className="w-4 h-4" style={{ color: 'var(--ios-amber-text)' }} aria-hidden="true" />
+              <span>Riwayat Sesi & Backup Data Lokal</span>
             </h3>
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={handleExportData}
-                className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-emerald-400 border border-slate-700 flex items-center gap-1.5"
+                className="ios-btn-secondary text-xs px-3"
               >
-                <Download className="w-3.5 h-3.5" /> Ekspor Backup (.json)
+                <Download className="w-3.5 h-3.5" style={{ color: 'var(--ios-green-text)' }} aria-hidden="true" />
+                <span>Ekspor (.json)</span>
               </button>
               <button
                 type="button"
+                disabled={isImporting}
                 onClick={() => fileInputRef.current?.click()}
-                className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-cyan-400 border border-slate-700 flex items-center gap-1.5"
+                className="ios-btn-blue text-xs px-3"
               >
-                <Upload className="w-3.5 h-3.5" /> Impor Backup
+                <Upload className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>{isImporting ? 'Memuat...' : 'Impor Backup'}</span>
               </button>
               <input
                 ref={fileInputRef}
                 type="file"
                 accept=".json"
+                aria-label="Pilih file backup JSON"
                 onChange={handleImportData}
                 className="hidden"
               />
@@ -522,18 +676,27 @@ export function WorkoutTracker({ activePlan, onInspectExercise }) {
           </div>
 
           {history.length === 0 ? (
-            <p className="text-xs text-slate-400 py-4 text-center">
-              Belum ada riwayat sesi selesai. Centang set latihanmu hari ini lalu klik "Selesaikan Latihan"!
-            </p>
+            <div className="ios-inset-surface p-6 text-center">
+              <p className="text-xs font-medium" style={{ color: 'var(--ios-text-secondary)' }}>
+                Belum ada riwayat sesi selesai. Centang set latihanmu hari ini lalu tekan tombol "Selesaikan Latihan Hari Ini".
+              </p>
+            </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
               {history.map((rec) => (
-                <div key={rec.id} className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-xs">
-                  <div className="font-bold text-white mb-0.5">{rec.title}</div>
-                  <div className="text-xs text-slate-400 mb-2">{rec.date}</div>
-                  <div className="flex items-center justify-between text-xs text-slate-300 pt-2 border-t border-slate-900">
+                <div key={rec.id} className="ios-inset-surface p-3.5 text-xs">
+                  <div className="font-bold text-sm mb-0.5">{rec.title}</div>
+                  <div className="mb-2" style={{ color: 'var(--ios-text-secondary)' }}>
+                    {rec.date}
+                  </div>
+                  <div
+                    className="flex items-center justify-between pt-2 border-t"
+                    style={{ borderColor: 'var(--ios-separator)' }}
+                  >
                     <span>{rec.completedSets} Set Selesai</span>
-                    <span className="font-bold text-emerald-400">{rec.totalVolumeKg} kg Volume</span>
+                    <span className="font-bold" style={{ color: 'var(--ios-green-text)' }}>
+                      {rec.totalVolumeKg} kg Volume
+                    </span>
                   </div>
                 </div>
               ))}
@@ -542,241 +705,346 @@ export function WorkoutTracker({ activePlan, onInspectExercise }) {
         </div>
       )}
 
-      {/* Exercises List Cards */}
-      <div className="space-y-4">
-        {exercises.map((exercise, exIndex) => {
-          const matchedCatalogEx = exerciseList.find(
-            (item) => item.name.toLowerCase() === exercise.name.toLowerCase()
-          );
-
-          return (
-            <div
-              key={exercise.id}
-              className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg space-y-3"
+      {/* Exercises List or Empty State (R-27) */}
+      {exercises.length === 0 ? (
+        <div className="ios-card p-10 text-center space-y-4">
+          <div
+            className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto"
+            style={{
+              backgroundColor: 'var(--ios-green-soft)',
+              color: 'var(--ios-green-text)'
+            }}
+          >
+            <Dumbbell className="w-6 h-6" aria-hidden="true" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-base font-bold">Belum Ada Gerakan di Sesi Ini</h3>
+            <p className="text-xs max-w-md mx-auto" style={{ color: 'var(--ios-text-secondary)' }}>
+              Tambahkan gerakan dari katalog pemula atau pulihkan daftar latihan Full Body hari pertama.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setShowAddModal(true)}
+              className="ios-btn-primary text-xs"
             >
-              {/* Exercise Header */}
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2.5">
-                  <span className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 text-xs font-black flex items-center justify-center">
-                    {exIndex + 1}
-                  </span>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-sm sm:text-base text-white">
-                        {exercise.name}
-                      </h3>
-                      {matchedCatalogEx && onInspectExercise && (
-                        <button
-                          type="button"
-                          onClick={() => onInspectExercise(matchedCatalogEx)}
-                          className="px-2 py-0.5 rounded-md bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-800/50 text-xs font-semibold flex items-center gap-1 transition"
-                          title="Lihat cara pakai & simulasi gerakan"
-                        >
-                          <HelpCircle className="w-3 h-3" /> Panduan & Video
-                        </button>
-                      )}
-                    </div>
-                    <span className="text-xs text-emerald-400/90 font-medium">
-                      {exercise.muscle} • Istirahat {exercise.restSeconds || 90} detik
+              <Plus className="w-4 h-4" aria-hidden="true" />
+              <span>Tambah Gerakan</span>
+            </button>
+            <button
+              type="button"
+              onClick={restoreDefaultSession}
+              className="ios-btn-secondary text-xs"
+            >
+              <RotateCcw className="w-4 h-4" aria-hidden="true" />
+              <span>Muat Sesi Default Pemula</span>
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {exercises.map((exercise, exIndex) => {
+            const matchedCatalogEx = exerciseList.find(
+              (item) => item.name.toLowerCase() === exercise.name.toLowerCase()
+            );
+
+            return (
+              <div key={exercise.id} className="ios-card p-4 sm:p-5 space-y-3.5">
+                {/* Exercise Header */}
+                <div className="flex items-start sm:items-center justify-between gap-2">
+                  <div className="flex items-start sm:items-center gap-3">
+                    <span
+                      className="w-7 h-7 rounded-[9px] text-xs font-extrabold flex items-center justify-center shrink-0 mt-0.5 sm:mt-0"
+                      style={{
+                        backgroundColor: 'var(--ios-green-soft)',
+                        color: 'var(--ios-green-text)'
+                      }}
+                    >
+                      {exIndex + 1}
                     </span>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => deleteExercise(exercise.id)}
-                  aria-label={`Hapus ${exercise.name}`}
-                  className="p-2 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition"
-                  title="Hapus gerakan dari sesi ini"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Sets Table */}
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead>
-                    <tr className="text-slate-400 border-b border-slate-800/80 pb-2">
-                      <th className="py-2 px-2 font-semibold w-12">SET</th>
-                      <th className="py-2 px-2 font-semibold">BEBAN (KG)</th>
-                      <th className="py-2 px-2 font-semibold">REPETISI</th>
-                      <th className="py-2 px-2 font-semibold text-center w-24">SELESAI</th>
-                      <th className="py-2 px-1 w-8"></th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800/50">
-                    {exercise.sets.map((set, setIndex) => (
-                      <tr
-                        key={setIndex}
-                        className={`transition ${
-                          set.completed ? 'bg-emerald-950/25 text-emerald-300' : ''
-                        }`}
-                      >
-                        <td className="py-2.5 px-2 font-bold text-slate-300">
-                          {set.setNum}
-                        </td>
-                        <td className="py-2.5 px-2">
-                          <input
-                            type="number"
-                            aria-label={`Beban kg set ${set.setNum} ${exercise.name}`}
-                            placeholder="15"
-                            value={set.weight}
-                            onChange={(e) =>
-                              handleSetChange(exercise.id, setIndex, 'weight', e.target.value)
-                            }
-                            className="w-20 py-1.5 px-2.5 rounded-lg bg-slate-950 border border-slate-700 text-white font-mono text-xs focus:border-emerald-500 focus:outline-none"
-                          />
-                        </td>
-                        <td className="py-2.5 px-2">
-                          <input
-                            type="number"
-                            aria-label={`Repetisi set ${set.setNum} ${exercise.name}`}
-                            placeholder="10"
-                            value={set.reps}
-                            onChange={(e) =>
-                              handleSetChange(exercise.id, setIndex, 'reps', e.target.value)
-                            }
-                            className="w-16 py-1.5 px-2.5 rounded-lg bg-slate-950 border border-slate-700 text-white font-mono text-xs focus:border-emerald-500 focus:outline-none"
-                          />
-                        </td>
-                        <td className="py-2.5 px-2 text-center">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="font-bold text-sm sm:text-base">
+                          {exercise.name}
+                        </h3>
+                        {matchedCatalogEx && onInspectExercise && (
                           <button
                             type="button"
-                            onClick={() => toggleSetComplete(exercise, setIndex)}
-                            aria-label={`Tandai set ${set.setNum} selesai`}
-                            className={`p-2 rounded-xl border transition ${
-                              set.completed
-                                ? 'bg-emerald-500 border-emerald-400 text-slate-950 shadow-md shadow-emerald-500/20'
-                                : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'
-                            }`}
+                            onClick={() => onInspectExercise(matchedCatalogEx)}
+                            className="min-h-[34px] px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 transition"
+                            style={{
+                              backgroundColor: 'var(--ios-blue-soft)',
+                              color: 'var(--ios-blue-text)'
+                            }}
                           >
-                            <CheckCircle2 className="w-4 h-4" />
+                            <HelpCircle className="w-3.5 h-3.5" aria-hidden="true" />
+                            <span>Panduan & Video</span>
                           </button>
-                        </td>
-                        <td className="py-2.5 px-1 text-right">
-                          {exercise.sets.length > 1 && (
+                        )}
+                      </div>
+                      <span
+                        className="text-xs font-medium block mt-0.5"
+                        style={{ color: 'var(--ios-text-secondary)' }}
+                      >
+                        {exercise.muscle} • Istirahat {exercise.restSeconds || 90} detik
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => deleteExercise(exercise.id)}
+                    aria-label={`Hapus ${exercise.name}`}
+                    title="Hapus gerakan dari sesi ini"
+                    className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition"
+                    style={{
+                      backgroundColor: 'var(--ios-fill)',
+                      color: 'var(--ios-red-text)'
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4" aria-hidden="true" />
+                  </button>
+                </div>
+
+                {/* Sets Table */}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr
+                        className="border-b"
+                        style={{
+                          borderColor: 'var(--ios-separator)',
+                          color: 'var(--ios-text-secondary)'
+                        }}
+                      >
+                        <th className="py-2 px-2 font-bold w-12">SET</th>
+                        <th className="py-2 px-2 font-bold">BEBAN (KG)</th>
+                        <th className="py-2 px-2 font-bold">REPETISI</th>
+                        <th className="py-2 px-2 font-bold text-center w-24">SELESAI</th>
+                        <th className="py-2 px-1 w-11"><span className="sr-only">Hapus Set</span></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {exercise.sets.map((set, setIndex) => (
+                        <tr
+                          key={setIndex}
+                          className="border-b last:border-b-0 transition"
+                          style={{
+                            borderColor: 'var(--ios-separator)',
+                            backgroundColor: set.completed ? 'var(--ios-green-soft)' : 'transparent'
+                          }}
+                        >
+                          <td className="py-2.5 px-2 font-extrabold tabular-nums text-sm">
+                            {set.setNum}
+                          </td>
+                          <td className="py-2.5 px-2">
+                            <input
+                              type="number"
+                              aria-label={`Beban kg set ${set.setNum} ${exercise.name}`}
+                              placeholder="15"
+                              value={set.weight}
+                              onChange={(e) =>
+                                handleSetChange(exercise.id, setIndex, 'weight', e.target.value)
+                              }
+                              className="ios-input w-20 font-mono text-sm text-center"
+                            />
+                          </td>
+                          <td className="py-2.5 px-2">
+                            <input
+                              type="number"
+                              aria-label={`Repetisi set ${set.setNum} ${exercise.name}`}
+                              placeholder="10"
+                              value={set.reps}
+                              onChange={(e) =>
+                                handleSetChange(exercise.id, setIndex, 'reps', e.target.value)
+                              }
+                              className="ios-input w-20 font-mono text-sm text-center"
+                            />
+                          </td>
+                          <td className="py-2.5 px-2 text-center">
                             <button
                               type="button"
-                              onClick={() => removeSet(exercise.id, setIndex)}
-                              aria-label={`Hapus set ${set.setNum}`}
-                              className="text-slate-500 hover:text-rose-400 p-1 text-sm font-bold"
+                              onClick={() => toggleSetComplete(exercise, setIndex)}
+                              aria-label={`Tandai set ${set.setNum} selesai`}
+                              aria-pressed={set.completed}
+                              className="w-11 h-11 rounded-xl inline-flex items-center justify-center border transition"
+                              style={
+                                set.completed
+                                  ? {
+                                      backgroundColor: 'var(--ios-green)',
+                                      color: 'var(--ios-green-on-fill)',
+                                      borderColor: 'transparent'
+                                    }
+                                  : {
+                                      backgroundColor: 'var(--ios-fill)',
+                                      color: 'var(--ios-text-secondary)',
+                                      borderColor: 'var(--ios-separator)'
+                                    }
+                              }
                             >
-                              ×
+                              <CheckCircle2 className="w-5 h-5" aria-hidden="true" />
                             </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                          </td>
+                          <td className="py-2.5 px-1 text-right">
+                            {exercise.sets.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => removeSet(exercise.id, setIndex)}
+                                aria-label={`Hapus set ${set.setNum}`}
+                                className="w-11 h-11 rounded-xl inline-flex items-center justify-center text-base font-bold transition"
+                                style={{ color: 'var(--ios-text-secondary)' }}
+                              >
+                                ×
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
 
-              {/* Add Set Button */}
-              <div className="pt-1">
-                <button
-                  type="button"
-                  onClick={() => addSetToExercise(exercise.id)}
-                  className="text-xs font-semibold text-slate-300 hover:text-emerald-400 flex items-center gap-1 transition"
-                >
-                  <Plus className="w-3.5 h-3.5" /> Tambah Set
-                </button>
+                {/* Add Set Button */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => addSetToExercise(exercise.id)}
+                    className="min-h-[40px] px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition"
+                    style={{
+                      backgroundColor: 'var(--ios-fill)',
+                      color: 'var(--ios-green-text)'
+                    }}
+                  >
+                    <Plus className="w-4 h-4" aria-hidden="true" />
+                    <span>Tambah Baris Set</span>
+                  </button>
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Bottom Action Bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+        <div className="flex items-center gap-2.5 w-full sm:w-auto">
           <button
             type="button"
             onClick={() => setShowAddModal(true)}
-            className="flex-1 sm:flex-initial py-3 px-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2 border border-slate-700"
+            className="flex-1 sm:flex-initial ios-btn-secondary text-xs sm:text-sm"
           >
-            <Plus className="w-4 h-4 text-emerald-400" /> Tambah Gerakan
+            <Plus className="w-4 h-4" style={{ color: 'var(--ios-green-text)' }} aria-hidden="true" />
+            <span>Tambah Gerakan</span>
           </button>
           <button
             type="button"
             onClick={resetCurrentCheckmarks}
-            className="py-3 px-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white text-xs font-semibold transition flex items-center gap-1.5 border border-slate-800"
+            className="ios-btn-secondary text-xs sm:text-sm"
             title="Reset tanda centang untuk mengulang sesi"
           >
-            <RotateCcw className="w-3.5 h-3.5" /> Reset Centang
+            <RotateCcw className="w-4 h-4" aria-hidden="true" />
+            <span>Reset Centang</span>
           </button>
         </div>
 
         <button
           type="button"
           onClick={finishWorkout}
-          className="w-full sm:w-auto py-3.5 px-8 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-sm font-black transition flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/20"
+          className="w-full sm:w-auto ios-btn-primary text-sm px-6"
         >
-          <Trophy className="w-4 h-4" /> Selesaikan Latihan Hari Ini 🎉
+          <Trophy className="w-4 h-4 shrink-0" aria-hidden="true" />
+          <span>Selesaikan Latihan Hari Ini</span>
         </button>
       </div>
 
-      {/* Custom Add Exercise Modal (Replaces prompt()) */}
+      {/* iOS Sheet: Add Exercise Modal */}
       {showAddModal && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Tambah Gerakan ke Sesi Ini"
           onClick={() => setShowAddModal(false)}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 ios-sheet-backdrop animate-fadeIn"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-5 space-y-4 text-slate-100 shadow-2xl"
+            className="w-full max-w-md ios-sheet p-5 space-y-4"
           >
+            <div className="ios-grabber sm:hidden" aria-hidden="true" />
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-base">Tambah Gerakan ke Sesi Ini</h3>
+              <h3 className="font-extrabold text-base">Tambah Gerakan ke Sesi Ini</h3>
               <button
+                type="button"
                 onClick={() => setShowAddModal(false)}
                 aria-label="Tutup modal tambah gerakan"
-                className="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white"
+                className="w-11 h-11 rounded-full flex items-center justify-center"
+                style={{
+                  backgroundColor: 'var(--ios-fill)',
+                  color: 'var(--ios-text-secondary)'
+                }}
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4" aria-hidden="true" />
               </button>
             </div>
 
             {/* Option 1: Pick from catalog */}
             <div>
-              <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider block mb-2">
-                Pilih Cepat dari Katalog Pemula:
+              <span
+                className="text-xs font-bold uppercase tracking-wider block mb-2"
+                style={{ color: 'var(--ios-green-text)' }}
+              >
+                Pilih Cepat dari Katalog Pemula
               </span>
-              <div className="max-h-44 overflow-y-auto space-y-1.5 pr-1">
+              <div className="max-h-48 overflow-y-auto ios-grouped-list">
                 {exerciseList.map((item) => (
                   <button
                     key={item.id}
                     type="button"
                     onClick={() => handleAddFromModal(item)}
-                    className="w-full p-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-left text-xs flex items-center justify-between transition"
+                    className="ios-grouped-row w-full p-3 text-left text-xs flex items-center justify-between transition"
                   >
                     <div>
-                      <strong className="text-white block">{item.name}</strong>
-                      <span className="text-slate-400">{item.muscleGroup}</span>
+                      <strong className="block text-sm">{item.name}</strong>
+                      <span style={{ color: 'var(--ios-text-secondary)' }}>{item.muscleGroup}</span>
                     </div>
-                    <span className="text-emerald-400 font-bold">+ Pilih</span>
+                    <span className="font-bold" style={{ color: 'var(--ios-green-text)' }}>
+                      + Pilih
+                    </span>
                   </button>
                 ))}
               </div>
             </div>
 
             {/* Option 2: Custom name */}
-            <div className="pt-3 border-t border-slate-800 space-y-2.5">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
-                Atau Ketik Nama Alat / Gerakan Sendiri:
-              </span>
+            <div
+              className="pt-3 border-t space-y-2.5"
+              style={{ borderColor: 'var(--ios-separator)' }}
+            >
+              <label
+                htmlFor="custom-exercise-name"
+                className="text-xs font-bold uppercase tracking-wider block"
+                style={{ color: 'var(--ios-text-secondary)' }}
+              >
+                Atau Ketik Nama Alat / Gerakan Sendiri
+              </label>
               <div className="flex gap-2">
                 <input
+                  id="custom-exercise-name"
                   type="text"
                   placeholder="Contoh: Dumbbell Goblet Squat"
                   value={customExName}
                   onChange={(e) => setCustomExName(e.target.value)}
-                  className="flex-1 py-2 px-3 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white focus:border-emerald-500 focus:outline-none"
+                  className="ios-input flex-1 text-sm"
                 />
+                <label htmlFor="custom-exercise-muscle" className="sr-only">
+                  Pilih Otot Target
+                </label>
                 <select
+                  id="custom-exercise-muscle"
                   value={customExMuscle}
                   onChange={(e) => setCustomExMuscle(e.target.value)}
-                  className="py-2 px-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-slate-200"
+                  className="ios-input text-sm"
                 >
                   <option>Dada</option>
                   <option>Punggung</option>
@@ -789,42 +1057,62 @@ export function WorkoutTracker({ activePlan, onInspectExercise }) {
               <button
                 type="button"
                 onClick={() => handleAddFromModal(null)}
-                className="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition"
+                className="ios-btn-primary w-full text-xs sm:text-sm"
               >
-                Tambahkan Gerakan Kustom
+                <span>Tambahkan Gerakan Kustom</span>
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Custom Celebration Modal (Replaces alert()) */}
+      {/* iOS Sheet: Celebration Summary Modal */}
       {celebrationSummary && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Ringkasan Latihan Tuntas"
           onClick={() => setCelebrationSummary(null)}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 ios-sheet-backdrop animate-fadeIn"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md bg-slate-900 border border-emerald-500/50 rounded-3xl p-6 text-center space-y-4 shadow-2xl"
+            className="w-full max-w-md ios-sheet p-6 text-center space-y-4"
           >
-            <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
-              <Trophy className="w-8 h-8" />
+            <div className="ios-grabber sm:hidden" aria-hidden="true" />
+            <div
+              className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto"
+              style={{
+                backgroundColor: 'var(--ios-green-soft)',
+                color: 'var(--ios-green-text)'
+              }}
+            >
+              <Trophy className="w-8 h-8" aria-hidden="true" />
             </div>
-            <h3 className="text-xl font-black text-white">Latihan Hari Ini Tuntas! 🎉</h3>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Kerja kerasmu hari ini sudah tersimpan di riwayat. Ingat untuk minum air putih dan konsumsi makanan berprotein!
+            <h3 className="text-xl font-extrabold">Latihan Hari Ini Tuntas!</h3>
+            <p className="text-xs leading-relaxed" style={{ color: 'var(--ios-text-secondary)' }}>
+              Catatan latihanmu hari ini sudah tersimpan di riwayat lokal. Pastikan minum air putih yang cukup dan konsumsi makanan berprotein.
             </p>
-            <div className="grid grid-cols-2 gap-3 text-xs bg-slate-950 p-3.5 rounded-2xl border border-slate-800">
+            <div className="grid grid-cols-2 gap-3 text-xs ios-inset-surface p-3.5">
               <div>
-                <span className="text-slate-400 block">Set Diselesaikan</span>
-                <strong className="text-lg font-black text-emerald-400">
+                <span className="block" style={{ color: 'var(--ios-text-secondary)' }}>
+                  Set Diselesaikan
+                </span>
+                <strong
+                  className="text-lg font-extrabold tabular-nums"
+                  style={{ color: 'var(--ios-green-text)' }}
+                >
                   {celebrationSummary.completedSets} Set
                 </strong>
               </div>
               <div>
-                <span className="text-slate-400 block">Total Volume Angkatan</span>
-                <strong className="text-lg font-black text-amber-400">
+                <span className="block" style={{ color: 'var(--ios-text-secondary)' }}>
+                  Total Volume Angkatan
+                </span>
+                <strong
+                  className="text-lg font-extrabold tabular-nums"
+                  style={{ color: 'var(--ios-amber-text)' }}
+                >
                   {celebrationSummary.totalVolumeKg} kg
                 </strong>
               </div>
@@ -832,19 +1120,19 @@ export function WorkoutTracker({ activePlan, onInspectExercise }) {
             <button
               type="button"
               onClick={() => setCelebrationSummary(null)}
-              className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-sm transition"
+              className="ios-btn-primary w-full text-sm"
             >
-              Mantap, Tutup Ringkasan
+              <span>Tutup Ringkasan</span>
             </button>
           </div>
         </div>
       )}
 
-      {/* Floating Rest Timer Modal */}
+      {/* iOS Sheet: Floating Rest Timer Modal */}
       {showTimerModal && (
         <div
           onClick={() => setShowTimerModal(false)}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-fadeIn"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 ios-sheet-backdrop animate-fadeIn"
         >
           <div onClick={(e) => e.stopPropagation()} className="w-full max-w-sm">
             <RestTimer

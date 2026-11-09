@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { HeroBanner } from './components/HeroBanner';
@@ -14,6 +14,14 @@ import { exerciseList, muscleGroupFilters } from './data/exercisesData';
 import { Dumbbell, Activity } from 'lucide-react';
 
 export default function App() {
+  const [theme, setTheme] = useState(() => {
+    try {
+      const saved = localStorage.getItem('gym_ios_theme');
+      return saved === 'light' || saved === 'dark' ? saved : 'dark';
+    } catch {
+      return 'dark';
+    }
+  });
   const [activeTab, setActiveTab] = useState('alat'); // 'alat', 'gerakan', 'program', 'tracker', 'nutrisi', 'etika'
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedEquipCategory, setSelectedEquipCategory] = useState('all');
@@ -22,6 +30,23 @@ export default function App() {
   const [activeExercise, setActiveExercise] = useState(null);
   const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [activePlan, setActivePlan] = useState(null);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) {
+      metaTheme.setAttribute('content', theme === 'dark' ? '#000000' : '#F2F2F7');
+    }
+    try {
+      localStorage.setItem('gym_ios_theme', theme);
+    } catch {
+      // ignore storage errors
+    }
+  }, [theme]);
+
+  const handleToggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
 
   // Filtered Equipment
   const filteredEquipment = useMemo(() => {
@@ -83,15 +108,17 @@ export default function App() {
   const showSearchHero = activeTab === 'alat' || activeTab === 'gerakan';
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-emerald-500 selection:text-slate-950 pb-20 lg:pb-10">
-      {/* Top Navbar */}
+    <div className="min-h-screen bg-[var(--ios-bg)] text-[var(--ios-label)] flex flex-col pb-24 lg:pb-12 transition-colors duration-200">
+      {/* iOS Top Navigation Bar */}
       <Navbar
         activeTab={activeTab}
         onSelectTab={setActiveTab}
         onOpenQuiz={() => setIsQuizOpen(true)}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
       />
 
-      {/* Main Container */}
+      {/* Main Content Container */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 w-full space-y-8 flex-1">
         {/* Hero Section (Only on Alat & Gerakan tabs so it doesn't clutter Tracker/Calculator) */}
         {showSearchHero && (
@@ -105,29 +132,27 @@ export default function App() {
 
         {/* SECTION 1: KATALOG ALAT GYM */}
         {activeTab === 'alat' && (
-          <section className="space-y-6">
+          <section className="space-y-5">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
-                  <Dumbbell className="w-6 h-6 text-emerald-400" />
-                  Ensiklopedia Alat Gym & Mesin ({filteredEquipment.length})
+                <h2 className="text-xl sm:text-2xl font-bold text-[var(--ios-label)] tracking-tight flex items-center gap-2">
+                  <Dumbbell className="w-6 h-6 text-[var(--ios-tint)]" />
+                  Ensiklopedia Alat Gym & Mesin (<span className="font-mono tabular-nums">{filteredEquipment.length}</span>)
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-300">
-                  Klik alat mana saja untuk melihat cara setting jok/beban, simulasi animasi, video, dan alternatif saat gym penuh.
+                <p className="text-xs sm:text-sm text-[var(--ios-label-secondary)] mt-0.5">
+                  Pilih alat untuk melihat cara atur jok, simulasi biomekanika, video, dan alternatif saat gym penuh.
                 </p>
               </div>
 
-              {/* Category Pills */}
+              {/* Category Filter Pills */}
               <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
                 {equipmentCategories.map((cat) => (
                   <button
                     key={cat.id}
                     type="button"
                     onClick={() => setSelectedEquipCategory(cat.id)}
-                    className={`py-1.5 px-3 rounded-xl text-xs font-semibold whitespace-nowrap transition border ${
-                      selectedEquipCategory === cat.id
-                        ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-bold'
-                        : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+                    className={`ios-pill min-h-[38px] px-3.5 text-xs whitespace-nowrap ${
+                      selectedEquipCategory === cat.id ? 'ios-pill-active' : ''
                     }`}
                   >
                     {cat.label}
@@ -138,8 +163,8 @@ export default function App() {
 
             {/* Grid of Equipment */}
             {filteredEquipment.length === 0 ? (
-              <div className="p-12 text-center rounded-3xl bg-slate-900/60 border border-slate-800">
-                <p className="text-slate-300 text-sm">
+              <div className="ios-card p-10 text-center space-y-3">
+                <p className="text-[var(--ios-label-secondary)] text-sm">
                   Tidak ditemukan alat dengan kata kunci "{searchQuery}".
                 </p>
                 <button
@@ -148,7 +173,7 @@ export default function App() {
                     setSearchQuery('');
                     setSelectedEquipCategory('all');
                   }}
-                  className="mt-3 px-4 py-2 rounded-xl bg-slate-800 text-emerald-400 text-xs font-bold hover:bg-slate-700"
+                  className="min-h-[44px] px-5 py-2 rounded-full bg-[var(--ios-fill)] text-[var(--ios-tint)] text-xs font-semibold"
                 >
                   Reset Pencarian
                 </button>
@@ -169,15 +194,15 @@ export default function App() {
 
         {/* SECTION 2: GERAKAN LATIHAN */}
         {activeTab === 'gerakan' && (
-          <section className="space-y-6">
+          <section className="space-y-5">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
-                  <Activity className="w-6 h-6 text-emerald-400" />
-                  Katalog Gerakan Berdasarkan Otot ({filteredExercises.length})
+                <h2 className="text-xl sm:text-2xl font-bold text-[var(--ios-label)] tracking-tight flex items-center gap-2">
+                  <Activity className="w-6 h-6 text-[var(--ios-tint)]" />
+                  Katalog Gerakan Berdasarkan Otot (<span className="font-mono tabular-nums">{filteredExercises.length}</span>)
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-300">
-                  Panduan form, simulasi gerak, pernapasan (inhale/exhale), dan rekomendasi beban hari pertama.
+                <p className="text-xs sm:text-sm text-[var(--ios-label-secondary)] mt-0.5">
+                  Panduan postur, simulasi gerak, pernapasan (inhale/exhale), dan rekomendasi beban hari pertama.
                 </p>
               </div>
 
@@ -188,10 +213,8 @@ export default function App() {
                     key={muscle}
                     type="button"
                     onClick={() => setSelectedMuscle(muscle)}
-                    className={`py-1.5 px-3 rounded-xl text-xs font-semibold whitespace-nowrap transition border ${
-                      selectedMuscle === muscle
-                        ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-bold'
-                        : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+                    className={`ios-pill min-h-[38px] px-3.5 text-xs whitespace-nowrap ${
+                      selectedMuscle === muscle ? 'ios-pill-active' : ''
                     }`}
                   >
                     {muscle}
@@ -202,8 +225,8 @@ export default function App() {
 
             {/* Grid of Exercises */}
             {filteredExercises.length === 0 ? (
-              <div className="p-12 text-center rounded-3xl bg-slate-900/60 border border-slate-800">
-                <p className="text-slate-300 text-sm">
+              <div className="ios-card p-10 text-center space-y-3">
+                <p className="text-[var(--ios-label-secondary)] text-sm">
                   Tidak ada gerakan yang cocok dengan filter saat ini.
                 </p>
                 <button
@@ -212,7 +235,7 @@ export default function App() {
                     setSearchQuery('');
                     setSelectedMuscle('Semua Otot');
                   }}
-                  className="mt-3 px-4 py-2 rounded-xl bg-slate-800 text-emerald-400 text-xs font-bold hover:bg-slate-700"
+                  className="min-h-[44px] px-5 py-2 rounded-full bg-[var(--ios-fill)] text-[var(--ios-tint)] text-xs font-semibold"
                 >
                   Tampilkan Semua Gerakan
                 </button>
@@ -294,12 +317,12 @@ export default function App() {
       <MobileBottomNav activeTab={activeTab} onSelectTab={setActiveTab} />
 
       {/* Footer Info & Disclaimer */}
-      <footer className="border-t border-slate-900 bg-slate-950 py-6 text-center text-xs text-slate-400">
+      <footer className="border-t border-[var(--ios-separator)] bg-[var(--ios-card)] py-6 text-center text-xs text-[var(--ios-label-secondary)]">
         <div className="max-w-7xl mx-auto px-4 space-y-1.5">
-          <p className="font-bold text-slate-300">
-            GymMulai • Panduan Lengkap Pemula Gym Indonesia (PC & HP)
+          <p className="font-semibold text-[var(--ios-label)]">
+            GymMulai • Panduan Lengkap Pemula Gym Indonesia (iOS Fitness Edition)
           </p>
-          <p className="text-slate-500 max-w-2xl mx-auto">
+          <p className="text-[var(--ios-label-secondary)] max-w-2xl mx-auto">
             Disclaimer: Konten bertujuan sebagai edukasi olahraga pemula. Konsultasikan dengan dokter apabila Anda memiliki kondisi medis khusus atau cedera persendian.
           </p>
         </div>

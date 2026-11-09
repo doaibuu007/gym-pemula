@@ -1,70 +1,114 @@
 import React from 'react';
-import { Dumbbell, Sparkles, Layers, Activity, CalendarCheck, ShieldCheck, Calculator } from 'lucide-react';
+import {
+  Dumbbell,
+  ClipboardList,
+  Layers,
+  Activity,
+  CalendarCheck,
+  ShieldCheck,
+  Calculator,
+  Sun,
+  Moon
+} from 'lucide-react';
 
-export function Navbar({ activeTab, onSelectTab, onOpenQuiz }) {
+export function Navbar({ activeTab, onSelectTab, onOpenQuiz, theme, onToggleTheme }) {
   const navItems = [
-    { id: 'alat', label: 'Katalog Alat', icon: Dumbbell },
+    { id: 'alat', label: 'Alat Gym', icon: Dumbbell },
     { id: 'gerakan', label: 'Gerakan', icon: Activity },
     { id: 'program', label: 'Program', icon: CalendarCheck },
-    { id: 'tracker', label: 'Tracker & Timer', icon: Layers },
-    { id: 'nutrisi', label: 'Kalori & Pemanasan', icon: Calculator },
-    { id: 'etika', label: 'Etika & Kamus', icon: ShieldCheck }
+    { id: 'tracker', label: 'Log & Timer', icon: Layers },
+    { id: 'nutrisi', label: 'Nutrisi', icon: Calculator },
+    { id: 'etika', label: 'Panduan', icon: ShieldCheck }
   ];
 
   return (
-    <header className="sticky top-0 z-40 bg-slate-950/85 backdrop-blur-lg border-b border-slate-800">
+    <header className="sticky top-0 z-40 ios-nav-blur border-b">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
-        {/* Logo */}
+        {/* iOS App Identity Button */}
         <button
           type="button"
           onClick={() => onSelectTab('alat')}
-          className="flex items-center gap-2.5 cursor-pointer group text-left"
+          className="min-h-[44px] flex items-center gap-2.5 text-left rounded-xl px-1 -ml-1 transition"
         >
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 p-0.5 shadow-lg shadow-emerald-500/20 group-hover:scale-105 transition-transform">
-            <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-              <Dumbbell className="w-5 h-5 text-emerald-400 -rotate-45" />
-            </div>
+          <div
+            className="w-10 h-10 rounded-[11px] flex items-center justify-center shrink-0"
+            style={{
+              backgroundColor: 'var(--ios-green)',
+              color: 'var(--ios-green-on-fill)'
+            }}
+          >
+            <Dumbbell className="w-5 h-5 -rotate-45" aria-hidden="true" />
           </div>
           <div>
-            <span className="font-black text-lg tracking-tight text-white flex items-center gap-1">
-              Gym<span className="text-emerald-400">Mulai</span>
+            <span className="font-extrabold text-lg tracking-tight block leading-none">
+              Gym<span style={{ color: 'var(--ios-green-text)' }}>Mulai</span>
             </span>
-            <span className="text-[11px] text-slate-400 block -mt-1 font-medium">Panduan Pemula</span>
+            <span
+              className="text-xs font-medium block mt-0.5"
+              style={{ color: 'var(--ios-text-secondary)' }}
+            >
+              Fitness & Panduan Pemula
+            </span>
           </div>
         </button>
 
-        {/* Desktop Navigation Links */}
-        <nav className="hidden lg:flex items-center gap-1" aria-label="Menu Utama">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => onSelectTab(item.id)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition ${
-                  isActive
-                    ? 'bg-slate-800 text-emerald-400 border border-slate-700'
-                    : 'text-slate-300 hover:text-white hover:bg-slate-900'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {item.label}
-              </button>
-            );
-          })}
+        {/* Desktop iOS Segmented Control Navigation */}
+        <nav className="hidden lg:flex items-center" aria-label="Menu Utama">
+          <div className="ios-segmented">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => onSelectTab(item.id)}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`ios-segment-btn ${isActive ? 'ios-segment-btn-active' : ''}`}
+                >
+                  <Icon
+                    className="w-4 h-4 shrink-0"
+                    style={{
+                      color: isActive ? 'var(--ios-green-text)' : 'currentColor'
+                    }}
+                    aria-hidden="true"
+                  />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </nav>
 
-        {/* CTA Quiz Button */}
+        {/* Right Actions: Theme Switcher + Custom Routine Builder CTA */}
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={onOpenQuiz}
-            className="py-2 px-3.5 sm:px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 text-xs font-black shadow-lg shadow-emerald-500/20 transition flex items-center gap-1.5"
+            onClick={onToggleTheme}
+            aria-label={theme === 'dark' ? 'Aktifkan Mode Terang (iOS Light)' : 'Aktifkan Mode Gelap (iOS Dark)'}
+            title={theme === 'dark' ? 'Ganti ke iOS Light Mode' : 'Ganti ke iOS Dark Mode'}
+            className="ios-btn-secondary px-3"
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Kuis Rencana</span>
+            {theme === 'dark' ? (
+              <>
+                <Sun className="w-4 h-4" style={{ color: 'var(--ios-amber-text)' }} aria-hidden="true" />
+                <span className="hidden sm:inline text-xs font-semibold">Terang</span>
+              </>
+            ) : (
+              <>
+                <Moon className="w-4 h-4" style={{ color: 'var(--ios-blue-text)' }} aria-hidden="true" />
+                <span className="hidden sm:inline text-xs font-semibold">Gelap</span>
+              </>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={onOpenQuiz}
+            className="ios-btn-primary text-xs sm:text-sm px-3.5 sm:px-4"
+          >
+            <ClipboardList className="w-4 h-4 shrink-0" aria-hidden="true" />
+            <span>Susun Jadwal</span>
           </button>
         </div>
       </div>

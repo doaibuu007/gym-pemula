@@ -2,7 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, RotateCcw, Plus, Volume2, VolumeX, X } from 'lucide-react';
 import { playShortBeep, playFinishChime } from '../utils/audio';
 
-export function RestTimer({ initialSeconds = 90, onFinished, onClose, autoStart = false, exerciseName = '' }) {
+export function RestTimer({
+  initialSeconds = 90,
+  onFinished,
+  onClose,
+  autoStart = false,
+  exerciseName = ''
+}) {
   const [totalSeconds, setTotalSeconds] = useState(initialSeconds);
   const [timeLeft, setTimeLeft] = useState(initialSeconds);
   const [isRunning, setIsRunning] = useState(autoStart);
@@ -25,7 +31,6 @@ export function RestTimer({ initialSeconds = 90, onFinished, onClose, autoStart 
     if (autoStart) setIsRunning(true);
   }, [initialSeconds, autoStart]);
 
-  // Escape key handler
   useEffect(() => {
     if (!onClose) return;
     const handleKey = (e) => {
@@ -35,7 +40,6 @@ export function RestTimer({ initialSeconds = 90, onFinished, onClose, autoStart 
     return () => window.removeEventListener('keydown', handleKey);
   }, [onClose]);
 
-  // Stable 1-second interval that does not recreate on every tick
   useEffect(() => {
     if (!isRunning) return;
 
@@ -88,138 +92,155 @@ export function RestTimer({ initialSeconds = 90, onFinished, onClose, autoStart 
     <div
       role="dialog"
       aria-label="Rest Timer Jeda Istirahat"
-      className="bg-slate-900/95 backdrop-blur-md border border-emerald-500/40 shadow-2xl rounded-3xl p-5 w-full max-w-sm mx-auto text-slate-100"
+      className="ios-sheet p-5 w-full max-w-sm mx-auto"
     >
-      <div className="flex items-center justify-between mb-3">
+      <div className="ios-grabber sm:hidden" aria-hidden="true" />
+
+      <div className="flex items-center justify-between mb-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className={`w-2.5 h-2.5 rounded-full ${isRunning ? 'bg-emerald-400 animate-ping' : 'bg-slate-500'}`}></span>
-            <h3 className="font-bold text-sm tracking-wide uppercase text-emerald-400">Rest Timer</h3>
+            <span
+              className="w-2.5 h-2.5 rounded-full"
+              style={{
+                backgroundColor: isRunning ? 'var(--ios-green)' : 'var(--ios-text-secondary)'
+              }}
+            />
+            <h3
+              className="font-bold text-xs tracking-wider uppercase"
+              style={{ color: 'var(--ios-green-text)' }}
+            >
+              Timer Istirahat Antar Set
+            </h3>
           </div>
           {exerciseName && (
-            <p className="text-xs text-slate-400 truncate max-w-[210px] mt-0.5">
-              Jeda: {exerciseName}
+            <p
+              className="text-xs truncate max-w-[210px] mt-0.5 font-medium"
+              style={{ color: 'var(--ios-text-secondary)' }}
+            >
+              {exerciseName}
             </p>
           )}
         </div>
+
         <div className="flex items-center gap-1.5">
           <button
+            type="button"
             onClick={() => setSoundEnabled(!soundEnabled)}
-            aria-label={soundEnabled ? 'Matikan suara timer' : 'Nyalakan suara timer'}
-            title={soundEnabled ? 'Suara Aktif' : 'Suara Mati'}
-            className={`p-2 rounded-xl border transition ${
-              soundEnabled
-                ? 'bg-emerald-950/60 border-emerald-800 text-emerald-300'
-                : 'bg-slate-800 border-slate-700 text-slate-400'
-            }`}
+            className="w-11 h-11 rounded-full flex items-center justify-center transition"
+            style={{
+              backgroundColor: 'var(--ios-fill)',
+              color: soundEnabled ? 'var(--ios-green-text)' : 'var(--ios-text-secondary)'
+            }}
+            aria-label={soundEnabled ? 'Matikan suara alarm timer' : 'Nyalakan suara alarm timer'}
+            title={soundEnabled ? 'Suara Aktif' : 'Suara Nonaktif'}
           >
-            {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            {soundEnabled ? <Volume2 className="w-4 h-4" aria-hidden="true" /> : <VolumeX className="w-4 h-4" aria-hidden="true" />}
           </button>
           {onClose && (
             <button
+              type="button"
               onClick={onClose}
               aria-label="Tutup Rest Timer"
-              className="p-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-400 hover:text-white"
+              className="w-11 h-11 rounded-full flex items-center justify-center transition"
+              style={{
+                backgroundColor: 'var(--ios-fill)',
+                color: 'var(--ios-text-secondary)'
+              }}
             >
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4" aria-hidden="true" />
             </button>
           )}
         </div>
       </div>
 
-      {/* Preset Pills */}
-      <div className="flex justify-between gap-1.5 mb-4">
-        {[45, 60, 90, 120].map((preset) => (
+      {/* iOS Clock Style Digital Readout */}
+      <div className="text-center my-4">
+        <div className="text-5xl font-black font-mono tracking-tight tabular-nums">
+          {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+        </div>
+        <p className="text-xs mt-1.5 font-medium" style={{ color: 'var(--ios-text-secondary)' }}>
+          {timeLeft === 0
+            ? 'Istirahat selesai! Siap mulai set berikutnya.'
+            : 'Atur napas & minum seteguk air putih'}
+        </p>
+      </div>
+
+      {/* Progress Track */}
+      <div
+        className="w-full h-2.5 rounded-full overflow-hidden mb-5"
+        style={{ backgroundColor: 'var(--ios-fill)' }}
+      >
+        <div
+          className="h-full transition-all duration-500"
+          style={{
+            width: `${progressPercent}%`,
+            backgroundColor: 'var(--ios-green)'
+          }}
+        />
+      </div>
+
+      {/* Presets in iOS Segmented Pill Style */}
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        {[
+          { label: '60d (Isolasi)', secs: 60 },
+          { label: '90d (Mesin)', secs: 90 },
+          { label: '120d (Berat)', secs: 120 }
+        ].map((p) => (
           <button
-            key={preset}
-            onClick={() => selectPreset(preset)}
-            className={`flex-1 py-1.5 px-2 rounded-xl text-xs font-bold border transition ${
-              totalSeconds === preset
-                ? 'bg-emerald-500 text-slate-950 border-emerald-400'
-                : 'bg-slate-800/80 hover:bg-slate-700 border-slate-700 text-slate-300'
+            key={p.secs}
+            type="button"
+            onClick={() => selectPreset(p.secs)}
+            className={`min-h-[44px] py-2 px-2 rounded-xl text-xs font-bold border transition ${
+              totalSeconds === p.secs ? 'ios-callout-green' : 'ios-inset-surface'
             }`}
+            style={{
+              color: totalSeconds === p.secs ? 'var(--ios-green-text)' : 'var(--ios-text-secondary)'
+            }}
           >
-            {preset}d
+            {p.label}
           </button>
         ))}
       </div>
 
-      {/* Circular Display */}
-      <div className="relative flex flex-col items-center justify-center my-2">
-        <svg className="w-36 h-36 transform -rotate-90">
-          <circle
-            cx="72"
-            cy="72"
-            r="62"
-            className="stroke-slate-800"
-            strokeWidth="8"
-            fill="transparent"
-          />
-          <circle
-            cx="72"
-            cy="72"
-            r="62"
-            className="stroke-emerald-400 transition-all duration-300"
-            strokeWidth="8"
-            strokeDasharray={389.5}
-            strokeDashoffset={389.5 - (389.5 * progressPercent) / 100}
-            strokeLinecap="round"
-            fill="transparent"
-          />
-        </svg>
-
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-mono text-3xl font-black tracking-tight text-white">
-            {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
-          </span>
-          <span className="text-xs text-slate-400 mt-0.5">
-            {isRunning ? 'Atur napas...' : timeLeft === 0 ? 'Mulai Set Baru!' : 'Siap mulai'}
-          </span>
-        </div>
-      </div>
-
-      {/* Control Buttons */}
-      <div className="flex items-center justify-center gap-2.5 mt-4">
+      {/* Controls */}
+      <div className="flex items-center gap-2">
         <button
-          onClick={resetTimer}
-          aria-label="Reset Timer"
-          title="Reset"
-          className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition"
-        >
-          <RotateCcw className="w-4 h-4" />
-        </button>
-
-        <button
+          type="button"
           onClick={toggleRun}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold text-sm shadow-lg transition ${
-            isRunning
-              ? 'bg-amber-500 hover:bg-amber-400 text-slate-950'
-              : 'bg-emerald-500 hover:bg-emerald-400 text-slate-950'
-          }`}
+          className="flex-1 ios-btn-primary text-xs sm:text-sm"
         >
           {isRunning ? (
             <>
-              <Pause className="w-4 h-4 fill-current" /> Jeda
+              <Pause className="w-4 h-4 shrink-0" aria-hidden="true" />
+              <span>Jeda</span>
             </>
           ) : (
             <>
-              <Play className="w-4 h-4 fill-current" /> {timeLeft === 0 ? 'Ulangi' : 'Mulai'}
+              <Play className="w-4 h-4 fill-current shrink-0" aria-hidden="true" />
+              <span>{timeLeft === 0 ? 'Ulangi' : 'Mulai'}</span>
             </>
           )}
         </button>
 
         <button
-          onClick={() => addTime(30)}
-          aria-label="Tambah 30 detik"
-          className="flex items-center gap-1 p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-bold transition"
+          type="button"
+          onClick={() => addTime(15)}
+          aria-label="Tambah 15 detik waktu istirahat"
+          className="ios-btn-secondary text-xs px-3"
         >
-          <Plus className="w-3.5 h-3.5" /> 30d
+          <Plus className="w-3.5 h-3.5" aria-hidden="true" />
+          <span>15d</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={resetTimer}
+          aria-label="Reset timer ke awal"
+          className="ios-btn-secondary px-3"
+        >
+          <RotateCcw className="w-4 h-4" aria-hidden="true" />
         </button>
       </div>
-
-      <p className="text-xs text-center text-slate-400 mt-3">
-        💡 Minum 1–2 teguk air putih dan lemaskan bahu selama jeda istirahat.
-      </p>
     </div>
   );
 }

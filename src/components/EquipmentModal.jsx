@@ -1,6 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { X, CheckCircle, AlertTriangle, Video, Wrench, Dumbbell, ExternalLink, Layers, Scale } from 'lucide-react';
-import { MuscleHighlightDiagram, MachineMechanismDiagram, InteractiveMotionSimulator } from './VisualDiagram';
+import {
+  X,
+  CheckCircle,
+  AlertTriangle,
+  Video,
+  Wrench,
+  Dumbbell,
+  ExternalLink,
+  Layers,
+  Scale,
+  ChevronRight
+} from 'lucide-react';
+import {
+  MuscleHighlightDiagram,
+  MachineMechanismDiagram,
+  InteractiveMotionSimulator
+} from './VisualDiagram';
 import { categoryLabelMap } from '../data/equipmentData';
 
 export function EquipmentModal({ equipment, onClose }) {
@@ -26,88 +41,128 @@ export function EquipmentModal({ equipment, onClose }) {
       aria-modal="true"
       aria-label={equipment.name}
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/85 backdrop-blur-sm overflow-y-auto animate-fadeIn"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-5 ios-sheet-backdrop overflow-y-auto animate-fadeIn"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-3xl my-auto bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]"
+        className="relative w-full max-w-3xl ios-sheet overflow-hidden flex flex-col max-h-[92dvh]"
       >
-        {/* Header Bar */}
-        <div className="relative bg-slate-950/80 border-b border-slate-800 p-4 sm:p-5 flex items-start justify-between gap-4">
+        {/* iOS Sheet Grabber Handle */}
+        <div className="ios-grabber" aria-hidden="true" />
+
+        {/* iOS Sheet Header */}
+        <div
+          className="px-5 pt-2 pb-4 border-b flex items-start justify-between gap-4"
+          style={{ borderColor: 'var(--ios-separator)' }}
+        >
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-1.5">
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-950/80 text-emerald-400 border border-emerald-800/40">
+              <span
+                className="px-2.5 py-0.5 rounded-full text-xs font-bold"
+                style={{
+                  backgroundColor: 'var(--ios-green-soft)',
+                  color: 'var(--ios-green-text)'
+                }}
+              >
                 {equipment.difficulty}
               </span>
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300">
+              <span
+                className="px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                style={{
+                  backgroundColor: 'var(--ios-fill)',
+                  color: 'var(--ios-text-secondary)'
+                }}
+              >
                 {equipment.categoryLabel || categoryLabelMap[equipment.category] || equipment.category}
               </span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+            <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight">
               {equipment.name}
             </h2>
-            <p className="text-sm font-medium text-emerald-400">
+            <p
+              className="text-sm font-semibold mt-0.5"
+              style={{ color: 'var(--ios-green-text)' }}
+            >
               {equipment.indonesianName}
             </p>
           </div>
 
           <button
+            type="button"
             onClick={onClose}
             aria-label="Tutup detail alat"
-            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition"
+            className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 transition"
+            style={{
+              backgroundColor: 'var(--ios-fill)',
+              color: 'var(--ios-text-secondary)'
+            }}
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 
-        {/* Tab Selection */}
-        <div className="flex border-b border-slate-800 bg-slate-950/40 px-4 sm:px-6 overflow-x-auto">
-          <button
-            onClick={() => setActiveTab('setup')}
-            className={`flex items-center gap-2 py-3 px-3 text-xs sm:text-sm font-bold border-b-2 whitespace-nowrap transition ${
-              activeTab === 'setup'
-                ? 'border-emerald-400 text-emerald-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Wrench className="w-4 h-4" /> 1. Cara Setting Alat
-          </button>
-          <button
-            onClick={() => setActiveTab('execution')}
-            className={`flex items-center gap-2 py-3 px-3 text-xs sm:text-sm font-bold border-b-2 whitespace-nowrap transition ${
-              activeTab === 'execution'
-                ? 'border-emerald-400 text-emerald-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Video className="w-4 h-4" /> 2. Simulasi & Video
-          </button>
-          <button
-            onClick={() => setActiveTab('rules')}
-            className={`flex items-center gap-2 py-3 px-3 text-xs sm:text-sm font-bold border-b-2 whitespace-nowrap transition ${
-              activeTab === 'rules'
-                ? 'border-emerald-400 text-emerald-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <AlertTriangle className="w-4 h-4" /> 3. Do's, Don'ts & Alternatif
-          </button>
+        {/* iOS Segmented Control Bar */}
+        <div
+          className="px-4 sm:px-6 py-3 border-b overflow-x-auto"
+          style={{ borderColor: 'var(--ios-separator)' }}
+        >
+          <div className="ios-segmented w-full grid grid-cols-3">
+            <button
+              type="button"
+              onClick={() => setActiveTab('setup')}
+              className={`ios-segment-btn text-xs sm:text-sm ${
+                activeTab === 'setup' ? 'ios-segment-btn-active' : ''
+              }`}
+            >
+              <Wrench className="w-4 h-4 shrink-0" aria-hidden="true" />
+              <span>1. Setting Alat</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('execution')}
+              className={`ios-segment-btn text-xs sm:text-sm ${
+                activeTab === 'execution' ? 'ios-segment-btn-active' : ''
+              }`}
+            >
+              <Video className="w-4 h-4 shrink-0" aria-hidden="true" />
+              <span>2. Simulasi & Video</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('rules')}
+              className={`ios-segment-btn text-xs sm:text-sm ${
+                activeTab === 'rules' ? 'ios-segment-btn-active' : ''
+              }`}
+            >
+              <AlertTriangle className="w-4 h-4 shrink-0" aria-hidden="true" />
+              <span>3. Tips & Alternatif</span>
+            </button>
+          </div>
         </div>
 
-        {/* Scrollable Content Body */}
-        <div className="p-4 sm:p-6 overflow-y-auto space-y-5 text-slate-200">
-          {/* Quick Summary & Starting Weight Card */}
+        {/* Scrollable Sheet Content Body */}
+        <div className="p-4 sm:p-6 overflow-y-auto space-y-5">
+          {/* Quick Summary & Starting Weight Callouts */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="bg-emerald-950/25 border border-emerald-900/50 rounded-2xl p-3.5 text-xs">
-              <strong className="text-emerald-400 block mb-1 uppercase tracking-wider">💡 Fungsi Utama:</strong>
-              <p className="text-slate-200 leading-relaxed">{equipment.summary}</p>
+            <div className="ios-callout-green p-3.5 text-xs">
+              <strong
+                className="block mb-1 uppercase tracking-wider font-bold"
+                style={{ color: 'var(--ios-green-text)' }}
+              >
+                Fungsi Utama Alat
+              </strong>
+              <p className="leading-relaxed">{equipment.summary}</p>
             </div>
             {equipment.startingWeightGuide && (
-              <div className="bg-amber-950/25 border border-amber-900/50 rounded-2xl p-3.5 text-xs">
-                <strong className="text-amber-400 flex items-center gap-1.5 mb-1 uppercase tracking-wider">
-                  <Scale className="w-3.5 h-3.5" /> Rekomendasi Beban Hari Pertama:
+              <div className="ios-callout-amber p-3.5 text-xs">
+                <strong
+                  className="flex items-center gap-1.5 mb-1 uppercase tracking-wider font-bold"
+                  style={{ color: 'var(--ios-amber-text)' }}
+                >
+                  <Scale className="w-3.5 h-3.5" aria-hidden="true" />
+                  Rekomendasi Beban Hari Pertama
                 </strong>
-                <p className="text-slate-200 leading-relaxed">{equipment.startingWeightGuide}</p>
+                <p className="leading-relaxed">{equipment.startingWeightGuide}</p>
               </div>
             )}
           </div>
@@ -115,26 +170,40 @@ export function EquipmentModal({ equipment, onClose }) {
           {/* TAB 1: CARA SETTING ALAT */}
           {activeTab === 'setup' && (
             <div className="space-y-4">
-              <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                <Wrench className="w-4 h-4 text-emerald-400" />
-                Langkah Penyesuaian Sebelum Mulai:
+              <h3
+                className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 px-1"
+                style={{ color: 'var(--ios-text-secondary)' }}
+              >
+                <Wrench className="w-4 h-4" style={{ color: 'var(--ios-green-text)' }} aria-hidden="true" />
+                Langkah Penyesuaian Sebelum Mulai
               </h3>
 
-              <div className="space-y-3">
+              {/* iOS Inset Grouped List for Setup Steps */}
+              <div className="ios-grouped-list">
                 {equipment.setupGuide.map((step, idx) => (
-                  <div key={idx} className="bg-slate-950/70 border border-slate-800 rounded-2xl p-4">
-                    <div className="flex items-center gap-2 font-bold text-sm text-emerald-300 mb-1.5">
-                      <span className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs">
+                  <div key={idx} className="ios-grouped-row p-4">
+                    <div className="flex items-center gap-2.5 font-bold text-sm mb-1.5">
+                      <span
+                        className="flex items-center justify-center w-6 h-6 rounded-full text-xs font-extrabold shrink-0"
+                        style={{
+                          backgroundColor: 'var(--ios-green-soft)',
+                          color: 'var(--ios-green-text)'
+                        }}
+                      >
                         {idx + 1}
                       </span>
-                      {step.part}
+                      <span>{step.part}</span>
                     </div>
-                    <p className="text-xs sm:text-sm text-slate-200 mb-2 leading-relaxed">
+                    <p
+                      className="text-xs sm:text-sm mb-2 leading-relaxed pl-8"
+                      style={{ color: 'var(--ios-text-secondary)' }}
+                    >
                       {step.instruction}
                     </p>
                     {step.tip && (
-                      <div className="text-xs font-medium text-amber-300 bg-amber-950/30 border border-amber-900/40 rounded-xl px-3 py-2">
-                        ⚠️ <strong>Tips Pemula:</strong> {step.tip}
+                      <div className="ml-8 text-xs font-medium ios-callout-amber px-3 py-2">
+                        <strong style={{ color: 'var(--ios-amber-text)' }}>Tips Pemula:</strong>{' '}
+                        <span>{step.tip}</span>
                       </div>
                     )}
                   </div>
@@ -148,7 +217,6 @@ export function EquipmentModal({ equipment, onClose }) {
           {/* TAB 2: GERAKAN, SIMULASI & VIDEO */}
           {activeTab === 'execution' && (
             <div className="space-y-5">
-              {/* Interactive Offline Motion Simulator */}
               <InteractiveMotionSimulator
                 id={equipment.id}
                 name={equipment.name}
@@ -156,57 +224,82 @@ export function EquipmentModal({ equipment, onClose }) {
                 muscleGroup={equipment.targetMuscleGroup}
               />
 
-              {/* Muscle Diagram */}
               <MuscleHighlightDiagram
                 activeMuscle={equipment.targetMuscleGroup}
                 targetMuscles={equipment.targetMuscles}
               />
 
-              {/* Step by Step Execution */}
+              {/* Step by Step Execution in iOS Inset Grouped List */}
               <div className="space-y-2">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300">
-                  Urutan Gerakan Langkah demi Langkah:
+                <h4
+                  className="text-xs font-bold uppercase tracking-wider px-1"
+                  style={{ color: 'var(--ios-text-secondary)' }}
+                >
+                  Urutan Gerakan Langkah demi Langkah
                 </h4>
-                <div className="space-y-2">
+                <div className="ios-grouped-list">
                   {equipment.executionSteps.map((step, idx) => (
-                    <div key={idx} className="flex items-start gap-3 p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs sm:text-sm">
-                      <span className="w-5 h-5 flex-shrink-0 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 font-bold text-xs flex items-center justify-center">
+                    <div key={idx} className="ios-grouped-row flex items-start gap-3 p-3.5 text-xs sm:text-sm">
+                      <span
+                        className="w-6 h-6 shrink-0 rounded-full font-bold text-xs flex items-center justify-center"
+                        style={{
+                          backgroundColor: 'var(--ios-green-soft)',
+                          color: 'var(--ios-green-text)'
+                        }}
+                      >
                         {idx + 1}
                       </span>
-                      <span className="leading-relaxed text-slate-200">{step}</span>
+                      <span className="leading-relaxed">{step}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Breathing Guide */}
-              <div className="p-3.5 rounded-xl bg-cyan-950/30 border border-cyan-800/40 text-xs sm:text-sm">
-                <span className="font-bold text-cyan-400 block mb-1">
-                  🫁 Cara Mengatur Napas yang Benar:
-                </span>
-                <p className="text-slate-200 leading-relaxed">{equipment.breathing}</p>
+              <div className="ios-callout-blue p-3.5 text-xs sm:text-sm">
+                <strong
+                  className="font-bold block mb-1"
+                  style={{ color: 'var(--ios-blue-text)' }}
+                >
+                  Cara Mengatur Napas yang Benar
+                </strong>
+                <p className="leading-relaxed">{equipment.breathing}</p>
               </div>
 
               {/* Video Tutorial Section */}
               <div className="space-y-2">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
-                    <Video className="w-4 h-4 text-emerald-400" /> Video Referensi YouTube:
+                <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+                  <h4
+                    className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5"
+                    style={{ color: 'var(--ios-text-secondary)' }}
+                  >
+                    <Video className="w-4 h-4" style={{ color: 'var(--ios-green-text)' }} aria-hidden="true" />
+                    Video Referensi YouTube
                   </h4>
                   <a
                     href={searchUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-xs font-semibold text-emerald-400 hover:underline flex items-center gap-1"
+                    className="text-xs font-bold hover:underline flex items-center gap-1 min-h-[36px]"
+                    style={{ color: 'var(--ios-blue-text)' }}
                   >
-                    Cari Lebih Banyak Video di YouTube <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Cari Lebih Banyak di YouTube</span>
+                    <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
                   </a>
                 </div>
 
-                <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-950 border border-slate-800">
+                <div
+                  className="relative aspect-video rounded-2xl overflow-hidden border"
+                  style={{
+                    backgroundColor: 'var(--ios-card-elevated)',
+                    borderColor: 'var(--ios-separator)'
+                  }}
+                >
                   <iframe
                     src={equipment.videoUrl}
                     title={`Video tutorial ${equipment.name}`}
+                    width="560"
+                    height="315"
                     className="w-full h-full"
                     loading="lazy"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -221,30 +314,36 @@ export function EquipmentModal({ equipment, onClose }) {
           {activeTab === 'rules' && (
             <div className="space-y-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* DO's */}
-                <div className="bg-emerald-950/20 border border-emerald-900/60 rounded-2xl p-4">
-                  <h4 className="font-bold text-xs uppercase tracking-wider text-emerald-400 flex items-center gap-1.5 mb-3">
-                    <CheckCircle className="w-4 h-4 text-emerald-400" /> Wajib Dilakukan (Do's)
+                <div className="ios-callout-green p-4">
+                  <h4
+                    className="font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 mb-3"
+                    style={{ color: 'var(--ios-green-text)' }}
+                  >
+                    <CheckCircle className="w-4 h-4" aria-hidden="true" />
+                    Wajib Dilakukan (Do's)
                   </h4>
-                  <ul className="space-y-2 text-xs leading-relaxed text-slate-200">
+                  <ul className="space-y-2 text-xs leading-relaxed">
                     {equipment.dosAndDonts.dos.map((item, idx) => (
                       <li key={idx} className="flex items-start gap-2">
-                        <span className="text-emerald-400 font-bold">✓</span>
+                        <span className="font-bold" style={{ color: 'var(--ios-green-text)' }}>✓</span>
                         <span>{item}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
 
-                {/* DONT's */}
-                <div className="bg-rose-950/20 border border-rose-900/60 rounded-2xl p-4">
-                  <h4 className="font-bold text-xs uppercase tracking-wider text-rose-400 flex items-center gap-1.5 mb-3">
-                    <AlertTriangle className="w-4 h-4 text-rose-400" /> Jangan Lakukan (Don'ts)
+                <div className="ios-callout-red p-4">
+                  <h4
+                    className="font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 mb-3"
+                    style={{ color: 'var(--ios-red-text)' }}
+                  >
+                    <AlertTriangle className="w-4 h-4" aria-hidden="true" />
+                    Jangan Lakukan (Don'ts)
                   </h4>
-                  <ul className="space-y-2 text-xs leading-relaxed text-slate-200">
+                  <ul className="space-y-2 text-xs leading-relaxed">
                     {equipment.dosAndDonts.donts.map((item, idx) => (
                       <li key={idx} className="flex items-start gap-2">
-                        <span className="text-rose-400 font-bold">✕</span>
+                        <span className="font-bold" style={{ color: 'var(--ios-red-text)' }}>✕</span>
                         <span>{item}</span>
                       </li>
                     ))}
@@ -253,22 +352,32 @@ export function EquipmentModal({ equipment, onClose }) {
               </div>
 
               {/* Alternatives when occupied */}
-              <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4">
-                <h4 className="font-bold text-xs uppercase tracking-wider text-amber-400 flex items-center gap-1.5 mb-2">
-                  <Layers className="w-4 h-4 text-amber-400" />
-                  Alat Sedang Dipakai Orang Lain? Gunakan Alternatif Ini:
+              <div className="ios-inset-surface p-4">
+                <h4
+                  className="font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 mb-1.5"
+                  style={{ color: 'var(--ios-amber-text)' }}
+                >
+                  <Layers className="w-4 h-4" aria-hidden="true" />
+                  Alat Sedang Dipakai Orang Lain? Gunakan Alternatif Ini
                 </h4>
-                <p className="text-xs text-slate-300 mb-3">
+                <p
+                  className="text-xs mb-3"
+                  style={{ color: 'var(--ios-text-secondary)' }}
+                >
                   Jangan buang waktu mengantre lama saat gym ramai. Kamu bisa melatih otot yang sama menggunakan:
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {equipment.alternativesIfOccupied.map((alt, idx) => (
                     <span
                       key={idx}
-                      className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs font-semibold text-slate-200 flex items-center gap-1.5"
+                      className="px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border"
+                      style={{
+                        backgroundColor: 'var(--ios-card)',
+                        borderColor: 'var(--ios-separator)'
+                      }}
                     >
-                      <Dumbbell className="w-3.5 h-3.5 text-emerald-400" />
-                      {alt}
+                      <Dumbbell className="w-3.5 h-3.5" style={{ color: 'var(--ios-green-text)' }} aria-hidden="true" />
+                      <span>{alt}</span>
                     </span>
                   ))}
                 </div>
@@ -277,16 +386,23 @@ export function EquipmentModal({ equipment, onClose }) {
           )}
         </div>
 
-        {/* Footer */}
-        <div className="p-4 bg-slate-950 border-t border-slate-800 flex items-center justify-between gap-2">
-          <span className="text-xs text-slate-400 truncate">
-            Otot Utama: <strong className="text-slate-200">{equipment.targetMuscles.join(', ')}</strong>
+        {/* iOS Sheet Footer */}
+        <div
+          className="p-4 border-t flex items-center justify-between gap-2"
+          style={{
+            backgroundColor: 'var(--ios-card)',
+            borderColor: 'var(--ios-separator)'
+          }}
+        >
+          <span className="text-xs truncate" style={{ color: 'var(--ios-text-secondary)' }}>
+            Otot Utama: <strong style={{ color: 'var(--ios-text)' }}>{equipment.targetMuscles.join(', ')}</strong>
           </span>
           <button
+            type="button"
             onClick={onClose}
-            className="py-2 px-5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs sm:text-sm transition"
+            className="ios-btn-primary text-xs sm:text-sm"
           >
-            Mengerti & Tutup
+            <span>Selesai</span>
           </button>
         </div>
       </div>
@@ -298,80 +414,119 @@ export function EquipmentCard({ equipment, onOpenDetail }) {
   const [imgError, setImgError] = useState(false);
 
   return (
-    <div
-      onClick={() => onOpenDetail(equipment)}
-      className="group relative bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-emerald-500/50 rounded-2xl p-4 transition-all duration-300 cursor-pointer shadow-lg hover:shadow-emerald-500/10 flex flex-col justify-between"
+    <article
+      className="ios-card-interactive p-4 flex flex-col justify-between"
     >
       <div>
-        {/* Image / Fallback Thumbnail */}
-        <div className="relative aspect-video rounded-xl overflow-hidden mb-3 bg-slate-950 border border-slate-800/80">
+        {/* Image Thumbnail with explicit dimensions (R-40) */}
+        <div
+          className="relative aspect-video rounded-2xl overflow-hidden mb-3.5 border"
+          style={{
+            backgroundColor: 'var(--ios-card-elevated)',
+            borderColor: 'var(--ios-separator)'
+          }}
+        >
           {!imgError ? (
             <img
               src={equipment.image}
               alt={equipment.name}
+              width="600"
+              height="338"
               onError={() => setImgError(true)}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              className="w-full h-full object-cover transition-transform duration-300"
               loading="lazy"
             />
           ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-emerald-950/40 p-4 text-center">
-              <Dumbbell className="w-10 h-10 text-emerald-400 mb-2" />
-              <span className="text-xs font-bold text-slate-200">{equipment.name}</span>
+            <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center">
+              <Dumbbell className="w-10 h-10 mb-2" style={{ color: 'var(--ios-green-text)' }} aria-hidden="true" />
+              <span className="text-xs font-bold">{equipment.name}</span>
             </div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent" />
 
-          <div className="absolute top-2 left-2">
-            <span className="px-2.5 py-0.5 rounded-md text-xs font-bold bg-slate-950/90 text-emerald-400 border border-slate-800">
+          {/* Solid Scrim Pill Badges (Contrast Verified R-25) */}
+          <div className="absolute top-2.5 left-2.5">
+            <span
+              className="px-2.5 py-1 rounded-lg text-[11px] font-bold"
+              style={{
+                backgroundColor: '#111111',
+                color: '#30D158'
+              }}
+            >
               {equipment.categoryLabel || categoryLabelMap[equipment.category] || equipment.category}
             </span>
           </div>
 
-          <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between text-xs text-white font-semibold">
+          <div
+            className="absolute bottom-2.5 left-2.5 right-2.5 px-2.5 py-1 rounded-lg flex items-center justify-between text-xs font-bold"
+            style={{
+              backgroundColor: 'rgba(17, 17, 17, 0.88)',
+              color: '#FFFFFF'
+            }}
+          >
             <span className="truncate">Target: {equipment.targetMuscleGroup}</span>
-            <span className="text-amber-400">★ {equipment.rating}</span>
+            <span style={{ color: '#FFB340' }}>★ {equipment.rating}</span>
           </div>
         </div>
 
         {/* Title & Info */}
-        <h3 className="font-bold text-base text-white group-hover:text-emerald-400 transition-colors line-clamp-1">
+        <h3 className="font-bold text-base leading-snug line-clamp-1">
           {equipment.name}
         </h3>
-        <p className="text-xs text-emerald-400 font-semibold mb-2">
+        <p
+          className="text-xs font-semibold mb-1.5"
+          style={{ color: 'var(--ios-green-text)' }}
+        >
           {equipment.indonesianName}
         </p>
-        <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed mb-3">
+        <p
+          className="text-xs line-clamp-2 leading-relaxed mb-3"
+          style={{ color: 'var(--ios-text-secondary)' }}
+        >
           {equipment.summary}
         </p>
       </div>
 
       <div>
         {/* Muscle Tags */}
-        <div className="flex flex-wrap gap-1.5 mb-3">
+        <div className="flex flex-wrap gap-1.5 mb-3.5">
           {equipment.targetMuscles.slice(0, 2).map((m, idx) => (
-            <span key={idx} className="text-xs px-2 py-0.5 rounded-md bg-slate-800 text-slate-200">
+            <span
+              key={idx}
+              className="text-xs px-2.5 py-1 rounded-lg font-medium"
+              style={{
+                backgroundColor: 'var(--ios-fill)',
+                color: 'var(--ios-text)'
+              }}
+            >
               {m.split('(')[0].trim()}
             </span>
           ))}
           {equipment.targetMuscles.length > 2 && (
-            <span className="text-xs px-1.5 py-0.5 rounded-md bg-slate-800 text-slate-400">
+            <span
+              className="text-xs px-2 py-1 rounded-lg font-medium"
+              style={{
+                backgroundColor: 'var(--ios-fill)',
+                color: 'var(--ios-text-secondary)'
+              }}
+            >
               +{equipment.targetMuscles.length - 2}
             </span>
           )}
         </div>
 
-        {/* Action Button */}
+        {/* Action Button (44px min height) */}
         <button
           type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpenDetail(equipment);
-          }}
-          className="w-full py-2.5 px-3 rounded-xl bg-slate-800 group-hover:bg-emerald-500 text-slate-200 group-hover:text-slate-950 text-xs font-bold transition flex items-center justify-center gap-1.5"
+          onClick={() => onOpenDetail(equipment)}
+          className="ios-btn-secondary w-full justify-between text-xs font-bold"
         >
-          <Wrench className="w-3.5 h-3.5" /> Cara Setting, Simulasi & Video
+          <span className="flex items-center gap-2">
+            <Wrench className="w-4 h-4" style={{ color: 'var(--ios-green-text)' }} aria-hidden="true" />
+            <span>Panduan Setting & Simulasi</span>
+          </span>
+          <ChevronRight className="w-4 h-4" style={{ color: 'var(--ios-text-secondary)' }} aria-hidden="true" />
         </button>
       </div>
-    </div>
+    </article>
   );
 }

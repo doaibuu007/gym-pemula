@@ -8,15 +8,15 @@ export function MobileBottomNav({ activeTab, onSelectTab }) {
     { id: 'program', label: 'Program', icon: CalendarCheck },
     { id: 'tracker', label: 'Tracker', icon: Layers },
     { id: 'nutrisi', label: 'Nutrisi', icon: Calculator },
-    { id: 'etika', label: 'Etika', icon: ShieldCheck }
+    { id: 'etika', label: 'Panduan', icon: ShieldCheck }
   ];
 
   return (
     <nav
-      aria-label="Navigasi Bawah Mobile"
-      className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-xl border-t border-slate-800/80 px-1.5 py-1.5"
+      aria-label="Tab Bar Bawah iOS"
+      className="lg:hidden fixed bottom-0 left-0 right-0 z-40 ios-nav-blur border-t px-1 pt-1 pb-[max(0.35rem,env(safe-area-inset-bottom))]"
     >
-      <div className="flex items-center justify-around">
+      <div className="grid grid-cols-6 gap-0.5 max-w-lg mx-auto">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -24,22 +24,24 @@ export function MobileBottomNav({ activeTab, onSelectTab }) {
             <button
               key={tab.id}
               type="button"
+              aria-current={isActive ? 'page' : undefined}
               onClick={() => {
                 onSelectTab(tab.id);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition ${
-                isActive ? 'text-emerald-400 font-bold' : 'text-slate-400 hover:text-slate-200'
-              }`}
+              className="min-h-[48px] flex flex-col items-center justify-center py-1 px-1 rounded-xl transition"
+              style={{
+                color: isActive ? 'var(--ios-green-text)' : 'var(--ios-text-secondary)'
+              }}
             >
-              <div
-                className={`p-1 rounded-xl transition ${
-                  isActive ? 'bg-emerald-950/80 border border-emerald-800/50' : ''
-                }`}
-              >
-                <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
-              </div>
-              <span className="text-[11px] mt-0.5 tracking-tight">{tab.label}</span>
+              <Icon
+                className="w-5 h-5"
+                strokeWidth={isActive ? 2.5 : 2}
+                aria-hidden="true"
+              />
+              <span className={`text-[11px] mt-1 tracking-tight leading-none ${isActive ? 'font-bold' : 'font-medium'}`}>
+                {tab.label}
+              </span>
             </button>
           );
         })}
