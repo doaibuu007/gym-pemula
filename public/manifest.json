@@ -4,16 +4,16 @@
   "description": "Panduan alat gym, simulasi gerakan, program pemula, kalkulator nutrisi, dan workout tracker.",
   "icons": [
     {
-      "src": "/icon.svg",
+      "src": "./icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ],
-  "start_url": "/",
-  "scope": "/",
-  "background_color": "#020617",
-  "theme_color": "#020617",
+  "start_url": "./",
+  "scope": "./",
+  "background_color": "#000000",
+  "theme_color": "#000000",
   "display": "standalone",
   "orientation": "portrait"
 }
